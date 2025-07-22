@@ -38,7 +38,7 @@ const ConversationalAI = ({ healthData, insights, onVoiceCommand }: Conversation
     onMessage: (message) => {
       console.log('AI Message:', message);
       // Handle voice commands
-      if (onVoiceCommand && message.type === 'user_transcript') {
+      if (onVoiceCommand && message.source === 'user') {
         onVoiceCommand(message.message);
       }
     },

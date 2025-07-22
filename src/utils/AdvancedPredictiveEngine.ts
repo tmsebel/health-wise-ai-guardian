@@ -425,7 +425,7 @@ export class AdvancedPredictiveEngine {
       'lifestyle_change': 'low'
     };
     
-    return feasibilityMap[intervention as keyof typeof feasibilityMap] || 'medium';
+    return (feasibilityMap[intervention as keyof typeof feasibilityMap] || 'medium') as 'high' | 'medium' | 'low';
   }
 
   private predictLongTermValues(data: VitalSignData[], dayOffset: number) {
