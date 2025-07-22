@@ -8,6 +8,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useUser } from '@/contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import PatientSelector from './PatientSelector';
+import HealthRiskAssessment from './HealthRiskAssessment';
+import AIInsights from './AIInsights';
+import PredictiveCharts from './PredictiveCharts';
+import { AIAnalysisEngine, VitalSignData, AIInsight, HealthRiskScore } from '@/utils/AIAnalysisEngine';
 
 // Mock real-time data with patient-specific variations
 const generateMockData = (patientId?: string) => {
@@ -36,8 +40,22 @@ const HealthDashboard = () => {
   const [currentData, setCurrentData] = useState(generateMockData(selectedPatient?.id));
   const [chartData, setChartData] = useState<any[]>([]);
   const [anomalies, setAnomalies] = useState<string[]>([]);
+  
+  // AI Analysis State
+  const [aiEngine] = useState(new AIAnalysisEngine());
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+  const [aiRecommendations, setAiRecommendations] = useState<AIInsight[]>([]);
+  const [healthRiskScore, setHealthRiskScore] = useState<HealthRiskScore>({
+    overall: 0,
+    cardiovascular: 0,
+    respiratory: 0,
+    metabolic: 0,
+    confidence: 0,
+    trend: 'stable'
+  });
+  const [heartRatePrediction, setHeartRatePrediction] = useState({ value: 0, confidence: 0 });
 
-  // Simulate real-time updates
+  // Simulate real-time updates with AI analysis
   useEffect(() => {
     const interval = setInterval(() => {
       const newData = generateMockData(selectedPatient?.id);
@@ -46,10 +64,36 @@ const HealthDashboard = () => {
       // Update chart data (keep last 20 points)
       setChartData(prev => {
         const updated = [...prev, newData].slice(-20);
+        
+        // AI Analysis
+        const patientId = selectedPatient?.id || 'default';
+        
+        // Update baseline with new data
+        aiEngine.updatePatientBaseline(patientId, updated);
+        
+        // Detect anomalies
+        const insights = aiEngine.detectAnomalies(patientId, newData, updated);
+        setAiInsights(insights);
+        
+        // Calculate risk score
+        const riskScore = aiEngine.calculateHealthRiskScore(patientId, newData, updated);
+        setHealthRiskScore(riskScore);
+        
+        // Generate recommendations
+        const recommendations = aiEngine.generateRecommendations(patientId, newData, riskScore, insights);
+        setAiRecommendations(recommendations);
+        
+        // Generate predictions
+        if (updated.length >= 5) {
+          const heartRates = updated.map(d => d.heartRate);
+          const hrPrediction = aiEngine.predictNextValue(heartRates);
+          setHeartRatePrediction(hrPrediction);
+        }
+        
         return updated;
       });
 
-      // AI Anomaly Detection (mock) - more sensitive for high-risk patients
+      // Legacy anomaly detection (simplified now that AI handles it)
       const newAnomalies = [];
       const isHighRisk = selectedPatient?.riskLevel === 'high';
       
@@ -66,7 +110,7 @@ const HealthDashboard = () => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [selectedPatient?.id, selectedPatient?.riskLevel]);
+  }, [selectedPatient?.id, selectedPatient?.riskLevel, aiEngine]);
 
   const handleLogout = () => {
     logout();
@@ -141,6 +185,23 @@ const HealthDashboard = () => {
     return variants[status as keyof typeof variants] || "secondary";
   };
 
+  // Prepare predictive chart data
+  const predictiveHeartRateData = chartData.map((data, index) => ({
+    timestamp: data.timestamp,
+    actual: data.heartRate,
+    isActual: true
+  }));
+
+  // Add prediction point
+  if (heartRatePrediction.value > 0) {
+    predictiveHeartRateData.push({
+      timestamp: 'Next',
+      predicted: heartRatePrediction.value,
+      confidence: heartRatePrediction.confidence,
+      isActual: false
+    });
+  }
+
   return (
     <div className="min-h-screen bg-gradient-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -177,7 +238,10 @@ const HealthDashboard = () => {
         {/* Patient Selector (only for professionals) */}
         <PatientSelector />
 
-        {/* Anomaly Alerts */}
+        {/* AI Insights and Alerts */}
+        <AIInsights insights={aiInsights} recommendations={aiRecommendations} />
+
+        {/* Legacy Anomaly Alerts (keeping for backward compatibility) */}
         {anomalies.length > 0 && (
           <div className="space-y-2">
             {anomalies.map((anomaly, index) => (
@@ -188,6 +252,9 @@ const HealthDashboard = () => {
             ))}
           </div>
         )}
+
+        {/* Health Risk Assessment */}
+        <HealthRiskAssessment riskScore={healthRiskScore} />
 
         {/* Health Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -219,35 +286,17 @@ const HealthDashboard = () => {
           ))}
         </div>
 
-        {/* Charts Section */}
+        {/* Enhanced Charts Section with Predictions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Heart Rate Chart */}
-          <Card className="bg-gradient-card shadow-card">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5 text-health-heart" />
-                Heart Rate Trends
-              </CardTitle>
-              <CardDescription>Real-time heart rate monitoring</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="timestamp" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                  <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="heartRate" 
-                    stroke="hsl(var(--heart-rate))" 
-                    fill="hsl(var(--heart-rate) / 0.1)"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          {/* Predictive Heart Rate Chart */}
+          <PredictiveCharts
+            data={predictiveHeartRateData}
+            title="Heart Rate Trends"
+            metric="Heart Rate"
+            unit="BPM"
+            color="hsl(var(--heart-rate))"
+            prediction={heartRatePrediction}
+          />
 
           {/* Blood Pressure Chart */}
           <Card className="bg-gradient-card shadow-card">
@@ -285,7 +334,7 @@ const HealthDashboard = () => {
           </Card>
         </div>
 
-        {/* AI Health Recommendations */}
+        {/* AI Health Recommendations - Enhanced */}
         <Card className="bg-gradient-card shadow-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -296,36 +345,66 @@ const HealthDashboard = () => {
                   For {selectedPatient.name}
                 </Badge>
               )}
+              <Badge variant="secondary" className="ml-2">
+                {healthRiskScore.confidence}% AI Confidence
+              </Badge>
             </CardTitle>
-            <CardDescription>Personalized insights based on health data</CardDescription>
+            <CardDescription>AI-powered personalized insights based on your health patterns and risk assessment</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Dynamic AI recommendations based on current analysis */}
+              {aiRecommendations.length > 0 ? (
+                aiRecommendations.slice(0, 4).map((rec, index) => (
+                  <div key={index} className="p-4 border border-border rounded-lg bg-muted/30">
+                    <h4 className={`font-semibold mb-2 ${
+                      rec.severity === 'high' ? 'text-destructive' : 
+                      rec.severity === 'medium' ? 'text-orange-500' : 'text-secondary'
+                    }`}>
+                      {rec.type === 'recommendation' ? '💡' : '⚠️'} {rec.title}
+                    </h4>
+                    <p className="text-sm text-muted-foreground mb-2">{rec.description}</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {rec.confidence}% confidence
+                      </Badge>
+                      <Badge variant={rec.severity === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                        {rec.severity}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Fallback to static recommendations if AI hasn't generated any yet
+                <div className="p-4 border border-border rounded-lg bg-muted/30">
+                  <h4 className="font-semibold text-secondary mb-2">✓ Good Health Patterns</h4>
+                  <p className="text-sm text-muted-foreground">Your vital signs are within expected ranges. AI is learning your patterns to provide personalized insights.</p>
+                </div>
+              )}
+              
+              {/* Show baseline learning status */}
               <div className="p-4 border border-border rounded-lg bg-muted/30">
-                <h4 className="font-semibold text-secondary mb-2">✓ Good Sleep Pattern</h4>
-                <p className="text-sm text-muted-foreground">Heart rate variability suggests good sleep quality. Keep maintaining current sleep schedule.</p>
-              </div>
-              <div className="p-4 border border-border rounded-lg bg-muted/30">
-                <h4 className="font-semibold text-accent mb-2">⚠ Hydration Alert</h4>
-                <p className="text-sm text-muted-foreground">Temperature trend suggests mild dehydration. Consider increasing water intake.</p>
-              </div>
-              <div className="p-4 border border-border rounded-lg bg-muted/30">
-                <h4 className="font-semibold text-primary mb-2">📈 Activity Boost</h4>
-                <p className="text-sm text-muted-foreground">Great progress on daily steps! You're 15% above average.</p>
-              </div>
-              <div className="p-4 border border-border rounded-lg bg-muted/30">
-                <h4 className="font-semibold text-destructive mb-2">🔍 Monitor Closely</h4>
+                <h4 className="font-semibold text-primary mb-2">🧠 AI Learning Status</h4>
                 <p className="text-sm text-muted-foreground">
-                  {selectedPatient?.riskLevel === 'high' 
-                    ? 'High-risk patient: Monitor blood pressure readings closely due to medical history.'
-                    : 'Blood pressure readings show slight elevation. Consider consulting healthcare provider.'
+                  AI confidence: {healthRiskScore.confidence}% • 
+                  {healthRiskScore.confidence > 80 
+                    ? ' High accuracy with sufficient data'
+                    : healthRiskScore.confidence > 60
+                    ? ' Good accuracy, learning your patterns'
+                    : ' Building accuracy, gathering baseline data'
                   }
                 </p>
+                <div className="mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    Risk Trend: {healthRiskScore.trend}
+                  </Badge>
+                </div>
               </div>
             </div>
+            
             <div className="flex gap-3 pt-4">
-              <Button className="bg-gradient-primary">View Detailed Analysis</Button>
-              <Button variant="outline">Export Health Report</Button>
+              <Button className="bg-gradient-primary">View Detailed AI Analysis</Button>
+              <Button variant="outline">Export AI Health Report</Button>
             </div>
           </CardContent>
         </Card>
