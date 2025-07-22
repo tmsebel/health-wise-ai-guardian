@@ -33,7 +33,7 @@ const LoginForm = () => {
               <Heart className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Health Monitor Login</CardTitle>
+          <CardTitle className="text-2xl">Health Dashboard Login</CardTitle>
           <CardDescription>
             Access your health monitoring dashboard
           </CardDescription>
