@@ -10,7 +10,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const generateMockData = () => ({
   heartRate: 72 + Math.random() * 20,
   bloodPressure: { systolic: 120 + Math.random() * 10, diastolic: 80 + Math.random() * 5 },
-  temperature: 98.6 + Math.random() * 2,
+  temperature: 37.0 + Math.random() * 1.1,
   oxygenSat: 97 + Math.random() * 3,
   steps: Math.floor(8000 + Math.random() * 4000),
   timestamp: new Date().toLocaleTimeString()
@@ -37,7 +37,7 @@ const HealthDashboard = () => {
       const newAnomalies = [];
       if (newData.heartRate > 100) newAnomalies.push("Elevated heart rate detected");
       if (newData.bloodPressure.systolic > 140) newAnomalies.push("High blood pressure alert");
-      if (newData.temperature > 100) newAnomalies.push("Fever detected");
+      if (newData.temperature > 38) newAnomalies.push("Fever detected");
       setAnomalies(newAnomalies);
     }, 3000);
 
@@ -64,10 +64,10 @@ const HealthDashboard = () => {
     {
       title: "Temperature",
       value: currentData.temperature.toFixed(1),
-      unit: "°F",
+      unit: "°C",
       icon: Thermometer,
       color: "health-temperature",
-      status: currentData.temperature > 100 ? "warning" : "normal"
+      status: currentData.temperature > 38 ? "warning" : "normal"
     },
     {
       title: "Oxygen Saturation",
