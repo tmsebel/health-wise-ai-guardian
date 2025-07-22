@@ -87,7 +87,7 @@ const HealthDashboard = () => {
         if (updated.length >= 5) {
           const heartRates = updated.map(d => d.heartRate);
           const hrPrediction = aiEngine.predictNextValue(heartRates);
-          setHeartRatePrediction(hrPrediction);
+          setHeartRatePrediction({ value: hrPrediction.prediction, confidence: hrPrediction.confidence });
         }
         
         return updated;
@@ -196,8 +196,7 @@ const HealthDashboard = () => {
   if (heartRatePrediction.value > 0) {
     predictiveHeartRateData.push({
       timestamp: 'Next',
-      predicted: heartRatePrediction.value,
-      confidence: heartRatePrediction.confidence,
+      actual: heartRatePrediction.value,
       isActual: false
     });
   }

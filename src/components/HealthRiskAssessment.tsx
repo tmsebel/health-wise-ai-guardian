@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, Heart, Lungs, Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { AlertTriangle, Heart, Wind, Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { HealthRiskScore } from '@/utils/AIAnalysisEngine';
 
 interface HealthRiskAssessmentProps {
@@ -96,7 +96,7 @@ const HealthRiskAssessment = ({ riskScore }: HealthRiskAssessmentProps) => {
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Lungs className="h-4 w-4 text-health-oxygen" />
+              <Wind className="h-4 w-4 text-health-oxygen" />
               <span className="text-sm font-medium">Respiratory</span>
             </div>
             <div className="flex items-center justify-between">
