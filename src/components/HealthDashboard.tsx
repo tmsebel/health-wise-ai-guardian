@@ -107,7 +107,7 @@ const HealthDashboard = () => {
         newAnomalies.push("Fever detected");
       }
       setAnomalies(newAnomalies);
-    }, 3000);
+    }, 10000); // Changed from 3000ms to 10000ms (10 seconds)
 
     return () => clearInterval(interval);
   }, [selectedPatient?.id, selectedPatient?.riskLevel, aiEngine]);
@@ -290,7 +290,7 @@ const HealthDashboard = () => {
           {/* Predictive Heart Rate Chart */}
           <PredictiveCharts
             data={predictiveHeartRateData}
-            title="Heart Rate Trends"
+            title="Heart Rate"
             metric="Heart Rate"
             unit="BPM"
             color="hsl(var(--heart-rate))"
@@ -302,7 +302,7 @@ const HealthDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Activity className="h-5 w-5 text-health-pressure" />
-                Blood Pressure Trends
+                Blood Pressure
               </CardTitle>
               <CardDescription>Systolic and diastolic pressure</CardDescription>
             </CardHeader>
