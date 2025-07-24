@@ -35,32 +35,32 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 const mockPatients: Patient[] = [
   {
     id: '1',
-    name: 'John Smith',
+    name: 'Siyabonga',
     age: 45,
     medicalId: 'MED001',
     medicalHistory: ['Hypertension', 'Type 2 Diabetes'],
     currentMedications: ['Metformin', 'Lisinopril'],
-    emergencyContact: '+1 (555) 123-4567',
+    emergencyContact: '+27 (079) 123-4567',
     riskLevel: 'high'
   },
   {
     id: '2',
-    name: 'Sarah Johnson',
-    age: 32,
+    name: 'Gregory Middleton',
+    age: 52,
     medicalId: 'MED002',
     medicalHistory: ['Asthma'],
     currentMedications: ['Albuterol Inhaler'],
-    emergencyContact: '+1 (555) 987-6543',
+    emergencyContact: '+27 (082) 987-6543',
     riskLevel: 'medium'
   },
   {
     id: '3',
-    name: 'Michael Brown',
+    name: 'Malick Dube',
     age: 28,
     medicalId: 'MED003',
     medicalHistory: ['Healthy'],
     currentMedications: [],
-    emergencyContact: '+1 (555) 456-7890',
+    emergencyContact: '+27 (083) 456-7890',
     riskLevel: 'low'
   }
 ];
@@ -75,7 +75,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (email && password) {
       const user: User = {
         id: '1',
-        name: role === 'professional' ? 'Dr. Emily Carter' : 'John Smith',
+        name: role === 'professional' ? 'Dr. Tawana Msebele' : 'Siyabonga Mthembu' : 'Banele Mnqobi',
         role,
         email
       };
