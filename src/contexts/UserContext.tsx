@@ -75,7 +75,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     if (email && password) {
       const user: User = {
         id: '1',
-        name: role === 'professional' ? 'Dr. Tawana Msebele' : 'Siyabonga Mthembu' : 'Banele Mnqobi',
+        name: role === 'professional' ? 'Dr. Tawana Msebele' : 'Siyabonga Mthembu',
         role,
         email
       };
